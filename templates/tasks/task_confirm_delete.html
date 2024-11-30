@@ -1,0 +1,19 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Видалення завдання</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>Ви впевнені, що хочете видалити завдання "{{ task.title }}"?</h1>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-delete">Так, видалити</button>
+        </form>
+        <a href="{% url 'task_list' %}" class="btn">Скасувати</a>
+    </div>
+</body>
+</html>

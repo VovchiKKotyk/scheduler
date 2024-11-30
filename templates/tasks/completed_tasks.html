@@ -1,0 +1,75 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Виконані задачі</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/completed_tasks.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/task_list.css' %}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Виконані задачі</h1>
+            <a class="btn back-btn" href="{% url 'task_list' %}">⬅️ Назад до списку</a>
+        </div>
+
+        <div id="completed-task-list" class="task-list">
+            {% if tasks %}
+                {% for task in tasks %}
+                    <div class="task-card" data-id="{{ task.id }}">
+                        <div class="task-header">
+                            <h2>{{ task.title }}</h2>
+                            <button class="btn return-btn" data-id="{{ task.id }}" data-status="{{ task.status }}">
+                                Повернути
+                            </button>
+                        </div>
+                        <p class="task-date-time">
+                            {{ task.date|date:"d.m.Y" }} о {{ task.time|date:"H:i" }}
+                        </p>
+                        <p class="task-description"><strong>Опис:</strong>{{ task.description }}</p>
+                        <p class="task-category"><strong>Категорія:</strong> {{ task.get_category_display }}</p>
+                        <p class="task-priority"><strong>Пріоритет:</strong> {{ task.get_priority_display }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>Немає виконаних задач.</p>
+            {% endif %}
+        </div>
+    </div>
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".return-btn").forEach(function (button) {
+            button.addEventListener("click", function () {
+                const taskId = this.getAttribute("data-id");
+                
+                $.ajax({
+                    url: "{% url 'toggle_task_status' %}",
+                    method: "POST",
+                    data: {
+                        id: taskId,
+                        csrfmiddlewaretoken: "{{ csrf_token }}"
+                    },
+                    success: (response) => {
+                        console.log("Статус змінено:", response);
+    
+                        const taskCard = this.closest(".task-card");
+                        
+                        if (response.new_status === "pending") {
+                            taskCard.classList.add("fade-out");
+                            setTimeout(() => {
+                                taskCard.remove(); 
+                            }, 500);
+                        }
+                    },
+                    error: (xhr, status, error) => {
+                        console.error("Помилка при зміні статусу:", error);
+                    }
+                });
+            });
+        });
+    });
+</script>
+</body>
+</html>

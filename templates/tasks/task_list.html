@@ -1,0 +1,126 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Список завдань</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/task_list.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Список завдань</h1>
+            <a class="btn stats-btn" href="{% url 'task_statistics' %}">📊 Статистика</a> 
+            <a class="btn completed-tasks-btn" href="{% url 'completed_tasks' %}">✅ Виконані задачі</a>
+        </div>
+    
+        <a class="btn add-task-btn" href="{% url 'task_create' %}">+ Додати нове завдання</a>
+        <div id="task-list" class="task-list">
+            {% for task in tasks %}
+                <div class="task-card {% if task.status == 'completed' %}completed-task{% endif %}" data-id="{{ task.id }}">
+                    <div class="task-header">
+                        <h2>{{ task.title }}</h2>
+                        <button 
+                            class="btn status-btn {% if task.status == 'pending' %}btn-danger{% else %}btn-success{% endif %}" 
+                            data-id="{{ task.id }}" 
+                            data-status="{{ task.status }}">
+                            {% if task.status == 'pending' %}Не виконано{% else %}Виконано{% endif %}
+                        </button>
+                    </div>
+                    <p class="task-date-time">
+                        {{ task.date|date:"d.m.Y" }} о {{ task.time|date:"H:i" }}
+                    </p>
+                    <p class="task-description"><strong>Опис:</strong>{{ task.description }}</p>
+                    <p class="task-category"><strong>Категорія:</strong> {{ task.get_category_display }}</p>
+                    <p class="task-priority"><strong>Пріоритет:</strong> {{ task.get_priority_display }}</p>
+        
+                    <div class="task-actions">
+                        <a class="btn edit-btn" href="{% url 'task_update' task.pk %}">✏️ Редагувати</a>
+                        <a class="btn delete-btn" href="{% url 'task_delete' task.pk %}">🗑️ Видалити</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let sortable = new Sortable(document.getElementById('task-list'), {
+                animation: 200,  
+                ghostClass: 'sortable-ghost', 
+                swapThreshold: 0.5,  
+                onEnd: function(evt) {
+                    let order = [];
+                    $('#task-list .task-card').each(function(index, element) {
+                        order.push($(element).data('id'));
+                    });
+                    
+                    $.ajax({
+                        url: '{% url "update_task_order" %}',
+                        method: 'POST',
+                        data: {
+                            order: JSON.stringify(order),
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function(response) {
+                            console.log('Order updated successfully.');
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Failed to update order:', error);
+                        }
+                    });
+                }
+            });
+            document.querySelectorAll(".status-btn").forEach(function (button) {
+                button.addEventListener("click", function () {
+                    const taskId = this.getAttribute("data-id");
+                    
+                    $.ajax({
+                        url: "{% url 'toggle_task_status' %}",
+                        method: "POST",
+                        data: {
+                            id: taskId,
+                            csrfmiddlewaretoken: "{{ csrf_token }}"
+                        },
+                        success: (response) => {
+                            console.log("Статус змінено:", response);
+        
+                            const taskCard = this.closest(".task-card");
+                            
+                            if (response.new_status === "completed") {
+                                taskCard.classList.add("fade-out");
+                                setTimeout(() => {
+                                    taskCard.remove();
+                                }, 5000); 
+                            }
+                        },
+                        error: (xhr, status, error) => {
+                            console.error("Помилка при зміні статусу:", error);
+                        }
+                    });
+                });
+            });
+            document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("filter-form");
+        
+            if (form) {
+                document.getElementById("sort-by").addEventListener("change", function () {
+                    form.submit();
+                });
+        
+                document.getElementById("category").addEventListener("change", function () {
+                    form.submit();
+                });
+            } else {
+                console.error("Форма для фільтрації не знайдена.");
+            }
+        });
+
+        });
+       
+
+    </script>
+</body>
+</html>

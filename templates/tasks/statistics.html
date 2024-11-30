@@ -1,0 +1,46 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Статистика завдань</title>
+    <link rel="stylesheet" href="{% static 'css/statistics.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+</head>
+<body>
+    <div class="container">
+        <h1>Статистика завдань</h1>
+        
+        <div class="stats-overview">
+            <p>Виконані завдання: <strong>{{ completed_tasks }}</strong></p>
+            <p>Невиконані завдання: <strong>{{ pending_tasks }}</strong></p>
+        </div>
+        
+        <canvas id="taskChart"></canvas>
+        <a href="{% url 'task_list' %}" class="btn">Назад до списку</a>
+    </div>
+    
+    <script>
+        const ctx = document.getElementById('taskChart').getContext('2d');
+        const taskChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Виконані', 'Невиконані'],
+                datasets: [{
+                    label: 'Статистика завдань',
+                    data: [{{ completed_tasks }}, {{ pending_tasks }}],
+                    backgroundColor: ['#28a745', '#dc3545'],
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

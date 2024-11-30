@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if form.instance.pk %}Редагувати завдання{% else %}Створити завдання{% endif %}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/uk.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>{% if form.instance.pk %}Редагувати завдання{% else %}Створити завдання{% endif %}</h1>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn">Зберегти</button>
+        </form>
+        <a href="{% url 'task_list' %}" class="btn">Назад до списку</a>
+    </div>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            flatpickr("input[name='date']", {
+                "locale": "uk",
+                "dateFormat": "Y-m-d",
+                "altFormat": "d.m.Y",
+                "altInput": true,
+            });
+
+            flatpickr("input[name='time']", {
+                "enableTime": true,
+                "noCalendar": true,
+                "time_24hr": true,
+                "dateFormat": "H:i",
+                "locale": "uk"
+            });
+        });
+    </script>
+</body>
+</html>
